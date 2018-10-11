@@ -4,7 +4,7 @@ sudo: true
 
 os:
   - linux
-#  - osx
+  - osx
 
 env:
   global:
@@ -48,36 +48,37 @@ addons:
       - libpango1.0-dev
   homebrew:
     packages:
-      - build-essential
       - autoconf
-      - gcc
       - pkg-config
       - git
       - cmake
-      - ca-certificates
-      - libfreetype6-dev
+      - freetype
       # Poppler-specific packages
-      - libfontconfig1-dev
-      - libjpeg-dev
-      - libnss3-dev
+      - fontconfig
+      - jpeg
+      - nss
       # libuninameslist-specific packages
       - automake
       - libtool
       # fontforge-specific packages
-      - libltdl-dev
-      - python-dev
-      - libpython-dev
-      - libglib2.0-dev
-      - libxml2-dev
-      - libspiro-dev
+      - python
+      - glib
+      - xml2
+      - libspiro
       - gettext
       # pdf2htmlEX-specific packages
-      - default-jre
-      - libcairo2-dev
-      - libpango1.0-dev
+      - cairo
+      - pango
   sauce_connect: true
 
+matrix:
+  fast_finish: true
+  allow_failures:
+    - os: osx # Until the build passes, then re-enable.
+
 before_install:
+  - if [ "${TRAVIS_OS_NAME}" == "osx" ] ; then brew reinstall gettext; fi
+  - if [ "${TRAVIS_OS_NAME}" == "osx" ] ; then brew unlink gettext && brew link gettext --force; fi
 # Clone and build poppler
   - git clone ${POPPLER_SOURCE}
   - cd poppler; 
@@ -105,8 +106,9 @@ before_install:
     ./bootstrap;
     ./configure --disable-programs --disable-python-extension --disable-python-scripting --prefix=${TRAVIS_BUILD_DIR}/usr;
     make;
-    make install;
-    sudo ldconfig
+    make install
+  - if [ "${TRAVIS_OS_NAME}" == "linux" ] ; sudo ldconfig; fi
+  - if [ "${TRAVIS_OS_NAME}" == "osx" ] ; sudo update_dyld_shared_cache; fi
   - cd ${TRAVIS_BUILD_DIR}
 
 # Test setup
